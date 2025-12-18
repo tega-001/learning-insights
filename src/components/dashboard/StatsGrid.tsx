@@ -1,6 +1,60 @@
 import { useData } from "@/context/DataContext";
-import { Users, TrendingUp } from "lucide-react";
+import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAnimatedCounter } from "@/hooks/useAnimatedCounter";
+
+interface StatCardProps {
+  method: string;
+  mean: number;
+  count: number;
+  color: string;
+  bgLight: string;
+  textColor: string;
+  delay: number;
+}
+
+const StatCard = ({ method, mean, count, color, bgLight, textColor, delay }: StatCardProps) => {
+  const animatedMean = useAnimatedCounter(mean, { duration: 1000, decimals: 1 });
+  const animatedCount = useAnimatedCounter(count, { duration: 800, decimals: 0 });
+
+  return (
+    <div
+      className="animate-slide-up rounded-xl border border-border bg-card p-5 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="flex items-center justify-between">
+        <div className={cn("rounded-lg p-2 transition-transform duration-300 hover:scale-110", bgLight)}>
+          <div className={cn("h-3 w-3 rounded-full transition-all duration-500", color)} />
+        </div>
+        <span className="text-xs font-medium text-muted-foreground">
+          {method}
+        </span>
+      </div>
+      
+      <div className="mt-4 space-y-2">
+        <div className="flex items-end gap-2">
+          <span className={cn("text-3xl font-bold tabular-nums transition-all duration-300", textColor)}>
+            {animatedMean}
+          </span>
+          <span className="mb-1 text-sm text-muted-foreground">avg</span>
+        </div>
+        
+        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+          <Users className="h-3.5 w-3.5" />
+          <span className="tabular-nums">{animatedCount} students</span>
+        </div>
+      </div>
+      
+      {/* Progress bar visualization */}
+      <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div 
+          className={cn("h-full rounded-full transition-all duration-1000 ease-out", color)}
+          style={{ width: `${Math.min(mean, 100)}%` }}
+        />
+      </div>
+    </div>
+  );
+};
 
 export const StatsGrid = () => {
   const { getMethodStats } = useData();
@@ -36,34 +90,11 @@ export const StatsGrid = () => {
   return (
     <div className="grid gap-4 md:grid-cols-3">
       {methodStats.map((stat, index) => (
-        <div
+        <StatCard
           key={stat.method}
-          className="animate-slide-up rounded-xl border border-border bg-card p-5 transition-shadow hover:shadow-md"
-          style={{ animationDelay: `${index * 100}ms` }}
-        >
-          <div className="flex items-center justify-between">
-            <div className={cn("rounded-lg p-2", stat.bgLight)}>
-              <div className={cn("h-3 w-3 rounded-full", stat.color)} />
-            </div>
-            <span className="text-xs font-medium text-muted-foreground">
-              {stat.method}
-            </span>
-          </div>
-          
-          <div className="mt-4 space-y-2">
-            <div className="flex items-end gap-2">
-              <span className={cn("text-3xl font-bold", stat.textColor)}>
-                {stat.mean.toFixed(1)}
-              </span>
-              <span className="mb-1 text-sm text-muted-foreground">avg</span>
-            </div>
-            
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Users className="h-3.5 w-3.5" />
-              <span>{stat.count} students</span>
-            </div>
-          </div>
-        </div>
+          {...stat}
+          delay={index * 100}
+        />
       ))}
     </div>
   );
